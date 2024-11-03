@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "system_lcd1602.h": "c"
+        "system_lcd1602.h": "c",
+        "stdio.h": "c"
     }
 }
