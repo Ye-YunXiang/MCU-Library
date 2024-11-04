@@ -40,8 +40,8 @@ typedef enum
 // 驱动返参定义------------------------------
 typedef enum
 {
-    ENUM_SPI_OVER_TIME, // 发送超时
-    ENUM_SPI_SUCCEED,   // 发送完成
+    ENUM_SPI_SEND_FILL, // 发送超时
+    ENUM_SPI_SEND_SUCCEED,   // 发送完成
 }SPI_RETURN_STATE_T;
 
 // 驱动状态定义------------------------------
@@ -70,17 +70,12 @@ typedef struct spi_ops_param
 }spi_ops_param_t;
 
 // 抽象驱动的调用接口------------------------------
-typedef void (*init_fn_t)(spi_object_t *self);
-typedef SPI_RETURN_STATE_T (*write_fn_t)(spi_ops_param_t *spi_param);
-typedef SPI_RETURN_STATE_T (*read_fn_t)(spi_ops_param_t *spi_param);
-typedef void (*close_fn_t)(spi_object_t *self);
-
 typedef struct spi_ops
 {
-    init_fn_t init;
-    write_fn_t write;
-    read_fn_t read;
-    close_fn_t close;
+    void (*init)(spi_object_t *self);
+    SPI_RETURN_STATE_T (*write)(spi_ops_param_t *spi_param);
+    SPI_RETURN_STATE_T (*read)(spi_ops_param_t *spi_param);
+    void (*close)(spi_object_t *self);
 }spi_ops_t;
 
 // 抽象驱动的外部调用内联接口------------------------------
@@ -106,6 +101,8 @@ static inline void spi_hal_close(spi_object_t *self)
 }
 
 // 本抽象驱动的注册和初始化------------------------------
+// 参数1： 传入获取对象的指针
+// 参数2： 选择内部初始化的对象
 void spi_driver_init(spi_object_t *self, SPI_DRIVER_COUNT_T driver);    
 
 #endif  //__SPI_HAL_H_

@@ -29,7 +29,7 @@
 #include <stdio.h>
 
 #include "spi_hal.h"
-#include "gpio.h"
+#include "main_file_define.h"
 
 // 定义 ---------------------------------------
 #define SET_IO(a,b)   Gpio_SetIO(a,b)
@@ -100,36 +100,36 @@ void spi_driver_init(spi_object_t *self, SPI_DRIVER_COUNT_T driver)
 }
 
 // 本类内部的工具-------------------------------------
-static uint8_t _spi_read_write_one_byte(spi_object_t *self, uint8_t tx_data)
+static uint8_t _spi_read_write_one_byte(user_data_t *input_user, uint8_t tx_data)
 {			
     uint8_t rx_data = 0;
 
     for(uint8_t i = 0; i < 8; i++)
     {
-        CLR_IO(self->uset_data->sck_port, self->uset_data->sck_pin);
+        CLR_IO(input_user->sck_port , input_user->sck_pin);
 
         SPI_DELAY_1US(1); 
 
         if(tx_data & 0x80)
         {
-            SET_IO(self->uset_data->mosi_port, self->uset_data->mosi_pin);
+            SET_IO(input_user->mosi_port, input_user->mosi_pin);
         }
         else 
         {
-            CLR_IO(self->uset_data->mosi_port, self->uset_data->mosi_pin);
+            CLR_IO(input_user->mosi_port, input_user->mosi_pin);
         }
 
         tx_data <<= 1;
 
         SPI_DELAY_1US(1); 
 
-        SET_IO(self->uset_data->sck_port, self->uset_data->sck_pin);
+        SET_IO(input_user->sck_port, input_user->sck_pin);
 
         SPI_DELAY_1US(1); 
 
         rx_data <<= 1;
 
-        if(GET_IO(self->uset_data->miso_port, self->uset_data->miso_pin))
+        if(GET_IO(input_user->miso_port, input_user->miso_pin))
         {
             rx_data |= 0x01;
         }
@@ -142,6 +142,8 @@ static uint8_t _spi_read_write_one_byte(spi_object_t *self, uint8_t tx_data)
 // 外部 OPS 的接口----------------------------------------
 static void _init(spi_object_t *self)
 {
+    user_data_t *input_user = self->uset_data;
+    
     // 这里是软件IIC ----------------------------
     stc_gpio_cfg_t 	stc_gpio_init;
 	
@@ -153,24 +155,26 @@ static void _init(spi_object_t *self)
 	stc_gpio_init.enPd 		= GpioPdDisable;
 	stc_gpio_init.enCtrlMode    = GpioAHB;
 	
-	Gpio_Init(self->uset_data->cs_port, self->uset_data->cs_pin, &stc_gpio_init);
-    Gpio_Init(self->uset_data->sck_port, self->uset_data->sck_pin, &stc_gpio_init);
-    Gpio_Init(self->uset_data->mosi_port, self->uset_data->mosi_pin, &stc_gpio_init);
+	Gpio_Init(input_user->cs_port, input_user->cs_pin, &stc_gpio_init);
+    Gpio_Init(input_user->sck_port, input_user->sck_pin, &stc_gpio_init);
+    Gpio_Init(input_user->mosi_port, input_user->mosi_pin, &stc_gpio_init);
 
     stc_gpio_init.enDir		= GpioDirIn;
     stc_gpio_init.enPd 		= GpioPdEnable;
 
-    Gpio_Init(self->uset_data->miso_port, self->uset_data->miso_pin, &stc_gpio_init);
+    Gpio_Init(input_user->miso_port, input_user->miso_pin, &stc_gpio_init);
 
-    SET_IO(self->uset_data->mosi_port, self->uset_data->mosi_pin);
-    SET_IO(self->uset_data->cs_port, self->uset_data->cs_pin);
-    SET_IO(self->uset_data->sck_port, self->uset_data->sck_pin);
+    SET_IO(input_user->mosi_port, input_user->mosi_pin);
+    SET_IO(input_user->cs_port, input_user->cs_pin);
+    SET_IO(input_user->sck_port, input_user->sck_pin);
 
     self->spi_state = ENUM_SPI_OPEN;
 }
 
 static void _close(spi_object_t *self)
 {
+    user_data_t *input_user = self->uset_data;
+    
     // 这里是软件IIC ----------------------------
     stc_gpio_cfg_t 	stc_gpio_init;
 	
@@ -182,49 +186,65 @@ static void _close(spi_object_t *self)
 	stc_gpio_init.enPd 		= GpioPdDisable;
 	stc_gpio_init.enCtrlMode    = GpioAHB;
 	
-	Gpio_Init(self->uset_data->cs_port, self->uset_data->cs_pin, &stc_gpio_init);
-    Gpio_Init(self->uset_data->sck_port, self->uset_data->sck_pin, &stc_gpio_init);
-    Gpio_Init(self->uset_data->mosi_port, self->uset_data->mosi_pin, &stc_gpio_init);
-    Gpio_Init(self->uset_data->miso_port, self->uset_data->miso_pin, &stc_gpio_init);
+	Gpio_Init(input_user->cs_port, input_user->cs_pin, &stc_gpio_init);
+    Gpio_Init(input_user->sck_port, input_user->sck_pin, &stc_gpio_init);
+    Gpio_Init(input_user->mosi_port, input_user->mosi_pin, &stc_gpio_init);
+    Gpio_Init(input_user->miso_port, input_user->miso_pin, &stc_gpio_init);
 
-    CLR_IO(self->uset_data->cs_port, self->uset_data->cs_pin);
-    CLR_IO(self->uset_data->sck_port, self->uset_data->sck_pin);
-    CLR_IO(self->uset_data->mosi_port, self->uset_data->mosi_pin);
-    CLR_IO(self->uset_data->miso_port, self->uset_data->miso_pin);
+    CLR_IO(input_user->cs_port, input_user->cs_pin);
+    CLR_IO(input_user->sck_port, input_user->sck_pin);
+    CLR_IO(input_user->mosi_port, input_user->mosi_pin);
+    CLR_IO(input_user->miso_port, input_user->miso_pin);
 
     self->spi_state = ENUM_SPI_CLOSE;
 }
 
 static SPI_RETURN_STATE_T _write(spi_ops_param_t *spi_param)
 {
+    if(spi_param->self->spi_state != ENUM_SPI_OPEN)
+    {
+        return ENUM_SPI_SEND_FILL;
+    }
+    
     uint8_t i = 0;
     uint8_t addr = 0;
+    user_data_t *input_user = spi_param->self->uset_data;
 
-    CLR_IO(self->uset_data->cs_port, self->uset_data->cs_pin);
+    CLR_IO(input_user->cs_port, input_user->cs_pin);
     addr = ((spi_param->address << 1) & 0x7E); 
-    _spi_read_write_one_byte(addr); // 地址
+    _spi_read_write_one_byte(input_user, addr); // 地址
 
-    if (i = 0; i < spi_param->length; i++)  // 发送数据
+    for (i = 0; i < spi_param->length; i++)  // 发送数据
     {
-        _spi_read_write_one_byte(spi_param->data[i]);
+        _spi_read_write_one_byte(input_user, spi_param->data[i]);
     }
 
-    SET_IO(self->uset_data->cs_port, self->uset_data->cs_pin);
+    SET_IO(input_user->cs_port, input_user->cs_pin);
+
+    return ENUM_SPI_SEND_SUCCEED;
 }
 
 static SPI_RETURN_STATE_T _read(spi_ops_param_t *spi_param)
 {
+    if(spi_param->self->spi_state != ENUM_SPI_OPEN)
+    {
+        return ENUM_SPI_SEND_FILL;
+    }
+    
     uint8_t i = 0;
     uint8_t addr = 0;
+    user_data_t *input_user = spi_param->self->uset_data;
 	
-	CLR_IO(spi_param->self->uset_data->cs_port, spi_param->self->uset_data->cs_pin);
+	CLR_IO(input_user->cs_port, input_user->cs_pin);
     addr = ((spi_param->address << 1) & 0x7E) | 0x80;
-    _spi_read_write_one_byte(addr);
+    _spi_read_write_one_byte(input_user, addr);
 
-    if (i = 0; i < spi_param->length; i++)  // 接收数据
+    for (i = 0; i < spi_param->length; i++)  // 接收数据
     {
-        spi_param->data[i] = _spi_read_write_one_byte(0);
+        spi_param->data[i] = _spi_read_write_one_byte(input_user, 0);
     }
 
-    SET_IO(self->uset_data->cs_port, self->uset_data->cs_pin);
+    SET_IO(input_user->cs_port, input_user->cs_pin);
+    
+    return ENUM_SPI_SEND_SUCCEED;
 }
