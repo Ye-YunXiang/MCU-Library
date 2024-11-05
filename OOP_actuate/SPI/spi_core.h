@@ -28,28 +28,22 @@
 
 // 这里只是定义了协议接口，具体内容请自己实现
 
-#ifndef __SPI_HAL_H_
-#define __SPI_HAL_H_
-
-// 目前有的驱动------------------------------
-typedef enum
-{
-    ENUM_SPI_DEIVER_RC522,
-}SPI_DRIVER_COUNT_T;
+#ifndef __SPI_CORE_H_
+#define __SPI_CORE_H_
 
 // 驱动返参定义------------------------------
 typedef enum
 {
-    ENUM_SPI_SEND_FILL, // 发送超时
-    ENUM_SPI_SEND_SUCCEED,   // 发送完成
+    SPI_RETURN_SEND_FILL,      // 发送失败
+    SPI_RETURN_SEND_SUCCEED,   // 发送完成
 }SPI_RETURN_STATE_T;
 
 // 驱动状态定义------------------------------
 typedef enum
 {
-    ENUM_SPI_NO_INIT,   // 没有初始化
-    ENUM_SPI_OPEN,      // 驱动打开
-    ENUM_SPI_CLOSE,     // 驱动关闭
+    SPI_RUN_NO_INIT,   // 没有初始化
+    SPI_RUN_OPEN,      // 驱动打开
+    SPI_RUN_CLOSE,     // 驱动关闭
 }SPI_RUN_STATE_T;
 
 // 驱动对象定义------------------------------
@@ -78,24 +72,25 @@ typedef struct spi_ops
     void (*close)(spi_object_t *self);
 }spi_ops_t;
 
+
 // 抽象驱动的外部调用内联接口------------------------------
 
-static inline void spi_hal_init(spi_object_t *self)
+static inline void spi_core_init(spi_object_t *self)
 {
     return (*(spi_ops_t **)self)->init(self);
 }
 
-static inline SPI_RETURN_STATE_T spi_hal_write(spi_ops_param_t *spi_param)
+static inline SPI_RETURN_STATE_T spi_core_write(spi_ops_param_t *self, )
 {
     return (*(spi_ops_t **)spi_param->self)->write(spi_param);
 }
 
-static inline SPI_RETURN_STATE_T spi_hal_read(spi_ops_param_t *spi_param)
+static inline SPI_RETURN_STATE_T spi_core_read(spi_ops_param_t *spi_param)
 {
     return (*(spi_ops_t **)spi_param->self)->read(spi_param);
 }
 
-static inline void spi_hal_close(spi_object_t *self)
+static inline void spi_core_close(spi_object_t *self)
 {
     return (*(spi_ops_t **)self)->close(self);
 }
@@ -105,4 +100,4 @@ static inline void spi_hal_close(spi_object_t *self)
 // 参数2： 选择内部初始化的对象
 void spi_driver_init(spi_object_t *self, SPI_DRIVER_COUNT_T driver);    
 
-#endif  //__SPI_HAL_H_
+#endif  //__SPI_CORE_H_
